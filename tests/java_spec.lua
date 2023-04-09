@@ -4,8 +4,9 @@ describe("coverage-java", function()
         require("coverage.languages.java")
     end)
 
-    it("can get covered and uncovered lines", function()
+    it("can get covered and uncovered lines from coverage xml report", function()
         local coverage_java = require("coverage.languages.java")
+        coverage_java.setup({coverage_file = "tests/jacoco.xml"})
 
         local actual_data
         coverage_java.load(function(data)
@@ -38,8 +39,9 @@ describe("coverage-java", function()
             "97", "98", "99", "100", "104" }, first_file.coveredlines)
     end)
 
-    it("can get coverage data per file", function()
+    it("can get coverage data per file from coverage xml report", function()
         local coverage_java = require("coverage.languages.java")
+        coverage_java.setup({coverage_file = "tests/jacoco.xml"})
 
         local actual_data
         coverage_java.load(function(data)
@@ -57,9 +59,36 @@ describe("coverage-java", function()
         assert.equals(0, first_file.partial)
         assert.equals(58, first_file.coverage)
 
+        local last_file = actual_data.files_summary[#actual_data.files_summary]
+
+        assert.equals("dev/conca/mavenconversion/mavencentral/ArtifactSearchResult$Response", last_file.filename)
+        assert.equals(27, last_file.statements)
+        assert.equals(27, last_file.missing)
+        assert.equals(0, last_file.branches)
+        assert.equals(0, last_file.partial)
+        assert.equals(0, last_file.coverage)
+
     end)
 
-    it("can report summary data", function()
+    it("can get summary data from coverage xml report", function()
+        local coverage_java = require("coverage.languages.java")
+        coverage_java.setup({coverage_file = "tests/jacoco.xml"})
+
+        local actual_data
+        coverage_java.load(function(data)
+            actual_data = data
+        end)
+
+        assert.same({
+            statements = 537,
+            missing = 417,
+            branches = 18,
+            partial = 14,
+            coverage = 22,
+        }, actual_data.totals)
+    end)
+
+    it("can report summary from parsed data", function()
         local coverage_java = require("coverage.languages.java")
 
         local files_summary = {}
@@ -74,16 +103,18 @@ describe("coverage-java", function()
 
         table.insert(files_summary, file_summary)
 
-        local data = {
+        local parsed_data = {
             files_summary = files_summary,
-            total_statements = 517,
-            total_missing = 417,
-            total_branches = 18,
-            total_partial_branches = 14,
-            total_coverage = 22,
+            totals = {
+                statements = 537,
+                missing = 417,
+                branches = 18,
+                partial_branches = 14,
+                coverage = 22,
+            }
         }
 
-        local summary = coverage_java.summary(data)
+        local summary = coverage_java.summary(parsed_data)
 
         local first_file = summary.files[1]
         assert.same({
@@ -96,7 +127,7 @@ describe("coverage-java", function()
         }, first_file)
 
         assert.same({
-            statements = 517,
+            statements = 537,
             missing = 417,
             branches = 18,
             partial = 14,

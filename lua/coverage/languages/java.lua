@@ -3,11 +3,15 @@ local M = {}
 local signs = require("coverage.signs")
 local xmlreader = require("xmlreader")
 
+local opts = {
+   coverage_file = "target/jacoco.xml"
+}
+
 local files_line_coverage = function(xmlfile)
     local reader = xmlreader.from_file(xmlfile)
 
     if not reader then
-        print("xml file was not loaded")
+        print("error reading coverage file: " .. xmlfile)
         return
     end
 
@@ -56,7 +60,7 @@ local files_summary = function(xmlfile)
     local reader = xmlreader.from_file(xmlfile)
 
     if not reader then
-        print("xml file was not loaded")
+        print("error reading coverage file: " .. xmlfile)
         return
     end
 
@@ -108,20 +112,70 @@ local files_summary = function(xmlfile)
     return files_summary
 end
 
+local totals = function(xmlfile)
+    local reader = xmlreader.from_file(xmlfile)
+
+    if not reader then
+        print("error reading coverage file: " .. xmlfile)
+        return
+    end
+
+    local totals = {}
+    local counters = {}
+
+    while reader:read() do
+
+        if reader:local_name() == "counter" and reader:node_type() == "element" then
+            local counter_type = reader:get_attribute("type")
+            local counter_missed = tonumber(reader:get_attribute("missed"))
+            local counter_covered = tonumber(reader:get_attribute("covered"))
+
+            counters[counter_type] = {
+                missed = counter_missed,
+                covered = counter_covered,
+                total = counter_missed + counter_covered
+            }
+        end
+
+        if reader:local_name() == "report" and reader:node_type() == "end element" then
+
+            totals.statements = counters['INSTRUCTION'].total
+            totals.missing = counters['INSTRUCTION'].missed
+            if counters['BRANCH'] then
+                totals.branches = counters['BRANCH'].total
+                totals.partial = counters['BRANCH'].missed
+            else
+                totals.branches = 0
+                totals.partial = 0
+            end
+
+            totals.coverage =  math.floor(
+                counters['INSTRUCTION'].covered / counters['INSTRUCTION'].total * 100)
+
+        end
+    end
+
+    return totals
+end
+
+M.setup = function(config)
+    if config ~= nil then
+        opts = vim.tbl_deep_extend("force", opts, config)
+    end
+end
+
 --- Loads a coverage report.
 -- This method should perform whatever steps are necessary to generate a coverage report.
 -- The coverage report results should passed to the callback, which will be cached by the plugin.
 -- @param callback called with results of the coverage report
 M.load = function(callback)
-    local xmlfile = "tests/jacoco.xml"
-
     local data = {}
-    data.line_coverage = files_line_coverage(xmlfile)
-    data.files_summary = files_summary(xmlfile)
+    data.line_coverage = files_line_coverage(opts.coverage_file)
+    data.files_summary = files_summary(opts.coverage_file)
+    data.totals = totals(opts.coverage_file)
 
     callback(data)
 end
-
 
 
 --- Returns a list of signs that will be placed in buffers.
@@ -152,11 +206,11 @@ M.summary = function(data)
     return {
         files = data.files_summary,
         totals = {
-            statements = data.total_statements,     -- number of total statements in the report
-            missing = data.total_missing,           -- number of lines missing coverage (uncovered) in the report
-            branches = data.total_branches,         -- number of total branches in the report
-            partial = data.total_partial_branches,  -- number of branches that are partially covered in the report
-            coverage = data.total_coverage,         -- coverage percentage to display in the report
+            statements = data.totals.statements,     -- number of total statements in the report
+            missing = data.totals.missing,           -- number of lines missing coverage (uncovered) in the report
+            branches = data.totals.branches,         -- number of total branches in the report
+            partial = data.totals.partial_branches,  -- number of branches that are partially covered in the report
+            coverage = data.totals.coverage,         -- coverage percentage to display in the report
         }
     }
 end
