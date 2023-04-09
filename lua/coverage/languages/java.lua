@@ -72,6 +72,7 @@ local files_summary = function(xmlfile)
     while reader:read() do
         if reader:local_name() == "class" and reader:node_type() == "element" then
             class_name = reader:get_attribute("name")
+            counters = {}
         end
 
         if reader:local_name() == "counter" and reader:node_type() == "element" then

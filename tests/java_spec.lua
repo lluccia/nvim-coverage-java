@@ -59,6 +59,15 @@ describe("coverage-java", function()
         assert.equals(0, first_file.partial)
         assert.equals(58, first_file.coverage)
 
+        local middle_file = actual_data.files_summary[5]
+
+        assert.equals("dev/conca/mavenconversion/mavencentral/ArtifactSearchResult", middle_file.filename)
+        assert.equals(17, middle_file.statements)
+        assert.equals(17, middle_file.missing)
+        assert.equals(0, middle_file.branches)
+        assert.equals(0, middle_file.partial)
+        assert.equals(0, middle_file.coverage)
+
         local last_file = actual_data.files_summary[#actual_data.files_summary]
 
         assert.equals("dev/conca/mavenconversion/mavencentral/ArtifactSearchResult$Response", last_file.filename)
