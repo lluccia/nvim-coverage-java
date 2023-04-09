@@ -4,7 +4,7 @@ local signs = require("coverage.signs")
 local xmlreader = require("xmlreader")
 
 local opts = {
-   coverage_file = "target/jacoco.xml"
+   coverage_file = "target/site/jacoco/jacoco.xml"
 }
 
 local files_line_coverage = function(xmlfile)
