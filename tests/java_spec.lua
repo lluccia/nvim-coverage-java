@@ -109,7 +109,7 @@ describe("coverage-java", function()
                 statements = 537,
                 missing = 417,
                 branches = 18,
-                partial_branches = 14,
+                partial = 14,
                 coverage = 22,
             }
         }

@@ -209,7 +209,7 @@ M.summary = function(data)
             statements = data.totals.statements,     -- number of total statements in the report
             missing = data.totals.missing,           -- number of lines missing coverage (uncovered) in the report
             branches = data.totals.branches,         -- number of total branches in the report
-            partial = data.totals.partial_branches,  -- number of branches that are partially covered in the report
+            partial = data.totals.partial,           -- number of branches that are partially covered in the report
             coverage = data.totals.coverage,         -- coverage percentage to display in the report
         }
     }
